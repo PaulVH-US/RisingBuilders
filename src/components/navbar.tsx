@@ -1,39 +1,42 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "~/lib/utils";
+import { signOut } from "~/app/auth-actions";
+import { BrandWordmark } from "~/components/brand-logo";
+import { NavLinks } from "~/components/nav-links";
+import { Button } from "~/components/ui/button";
+import { getProfile, getUser } from "~/lib/auth";
 
-const links = [
-  { href: "/", label: "Home" },
-  { href: "/notes", label: "Notes" },
-];
-
-export function Navbar() {
-  const pathname = usePathname();
+export async function Navbar() {
+  const profile = await getProfile();
+  // Distinguish "logged in but mid-onboarding" (user, no profile yet) from
+  // "logged out" so the nav never shows Sign in / Sign up to a signed-in user.
+  const isAuthed = profile ? true : Boolean(await getUser());
 
   return (
-    <nav className="border-b border-border bg-background">
-      <div className="mx-auto flex h-14 max-w-3xl items-center gap-6 px-4">
-        <Link href="/" className="font-semibold tracking-tight">
-          Lumos App
-        </Link>
-        <div className="flex gap-4">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "text-sm transition-colors hover:text-foreground",
-                pathname === link.href
-                  ? "text-foreground"
-                  : "text-muted-foreground",
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+    <nav className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
+      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-4 px-4">
+        <div className="flex items-center gap-6">
+          <Link href={profile ? "/projects" : isAuthed ? "/onboarding" : "/"}>
+            <BrandWordmark />
+          </Link>
+          {profile && <NavLinks username={profile.username} />}
         </div>
+
+        {isAuthed ? (
+          <form action={signOut}>
+            <Button type="submit" variant="ghost" size="sm">
+              Sign out
+            </Button>
+          </form>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/login">Sign in</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/signup">Sign up</Link>
+            </Button>
+          </div>
+        )}
       </div>
     </nav>
   );
