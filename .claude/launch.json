@@ -11,7 +11,8 @@
       "name": "Supabase Local",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["supabase", "start"],
-      "port": 54321
+      "port": 54321,
+      "autoPort": false
     }
   ]
 }

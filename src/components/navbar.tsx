@@ -28,14 +28,9 @@ export async function Navbar() {
             </Button>
           </form>
         ) : (
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/signup">Sign up</Link>
-            </Button>
-          </div>
+          <Button asChild size="sm">
+            <Link href="/waitlist">Join waitlist</Link>
+          </Button>
         )}
       </div>
     </nav>
