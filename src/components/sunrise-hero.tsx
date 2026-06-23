@@ -159,7 +159,7 @@ export function SunriseHero() {
           apps, and creative projects.
         </p>
         <div
-          className="animate-rise flex flex-wrap items-center justify-center gap-3"
+          className="animate-rise flex flex-col items-center gap-3"
           style={{ animationDelay: "1300ms" }}
         >
           <Button
@@ -167,19 +167,14 @@ export function SunriseHero() {
             size="lg"
             className="border-0 bg-white text-primary hover:bg-white/90"
           >
-            <Link href="/signup">
-              Start building
+            <Link href="/waitlist">
+              Join the waitlist
               <ArrowRight className="size-4" />
             </Link>
           </Button>
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="border border-white/60 bg-black/30 text-white shadow-sm backdrop-blur-md hover:bg-black/45 hover:text-white"
-          >
-            <Link href="/login">Sign in</Link>
-          </Button>
+          <p className="text-sm font-semibold text-white/90">
+            Launching July 1st. We&apos;ll email you when your spot is ready.
+          </p>
         </div>
       </div>
     </section>
