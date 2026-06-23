@@ -9,12 +9,21 @@ const links = [
   { href: "/builders", label: "Builders" },
 ];
 
-export function NavLinks({ username }: { username: string }) {
+export function NavLinks({
+  username,
+  isAdmin = false,
+}: {
+  username: string;
+  isAdmin?: boolean;
+}) {
   const pathname = usePathname();
+  const navLinks = isAdmin
+    ? [...links, { href: "/admin", label: "Admin" }]
+    : links;
 
   return (
     <div className="flex items-center gap-4">
-      {links.map((link) => (
+      {navLinks.map((link) => (
         <Link
           key={link.href}
           href={link.href}

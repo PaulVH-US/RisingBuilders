@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "~/lib/supabase/server";
 
@@ -57,6 +58,22 @@ export async function signUp(
 
   revalidatePath("/", "layout");
   redirect("/onboarding");
+}
+
+export async function signInWithGoogle() {
+  const supabase = await createClient();
+  const hdrs = await headers();
+  const origin = hdrs.get("origin") ?? `https://${hdrs.get("host")}`;
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${origin}/auth/callback` },
+  });
+  if (error) {
+    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+  }
+  // Redirect the browser to Google's consent screen.
+  redirect(data.url);
 }
 
 export async function signOut() {

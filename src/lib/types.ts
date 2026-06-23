@@ -69,6 +69,13 @@ export type Invitation = {
   created_at: string;
 };
 
+// Platform admins. Stored in a dedicated table (not a profiles column) so it
+// can't be self-set via profiles_update_own; rows are granted out-of-band.
+export type Admin = {
+  user_id: string;
+  created_at: string;
+};
+
 export type WaitlistSubmission = {
   id: string;
   first_name: string;
@@ -127,6 +134,12 @@ export interface Database {
         Insert: Partial<Invitation> &
           Pick<Invitation, "project_id" | "user_id">;
         Update: Partial<Invitation>;
+        Relationships: [];
+      };
+      admins: {
+        Row: Admin;
+        Insert: Partial<Admin> & Pick<Admin, "user_id">;
+        Update: Partial<Admin>;
         Relationships: [];
       };
       waitlist_submissions: {

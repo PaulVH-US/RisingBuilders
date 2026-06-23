@@ -38,6 +38,29 @@ export async function requireProfile(): Promise<Profile> {
   return profile;
 }
 
+// Whether the current user is a platform admin. Reads the `admins` table, which
+// only ever returns the caller's own row under RLS (admins_select_own).
+export async function isAdmin(): Promise<boolean> {
+  const user = await getUser();
+  if (!user) return false;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("admins")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  return Boolean(data);
+}
+
+// Guard for admin-only pages. Requires a signed-in, onboarded builder who is
+// also an admin; otherwise redirects to the feed. Returns the admin's profile.
+export async function requireAdmin(): Promise<Profile> {
+  const profile = await requireProfile();
+  if (!(await isAdmin())) redirect("/projects");
+  return profile;
+}
+
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 // "Active this week" signal (PRD 6.6) derived from last_active_at.
