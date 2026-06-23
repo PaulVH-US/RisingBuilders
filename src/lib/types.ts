@@ -68,6 +68,13 @@ export type Invitation = {
   created_at: string;
 };
 
+// Platform admins. Stored in a dedicated table (not a profiles column) so it
+// can't be self-set via profiles_update_own; rows are granted out-of-band.
+export type Admin = {
+  user_id: string;
+  created_at: string;
+};
+
 // Minimal Database interface so the Supabase client is generically typed.
 // Each table includes an empty `Relationships` array to satisfy supabase-js's
 // GenericTable constraint (embeds are resolved via explicit FK hints instead).
@@ -116,6 +123,12 @@ export interface Database {
         Insert: Partial<Invitation> &
           Pick<Invitation, "project_id" | "user_id">;
         Update: Partial<Invitation>;
+        Relationships: [];
+      };
+      admins: {
+        Row: Admin;
+        Insert: Partial<Admin> & Pick<Admin, "user_id">;
+        Update: Partial<Admin>;
         Relationships: [];
       };
     };

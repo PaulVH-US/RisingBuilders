@@ -70,3 +70,11 @@ insert into public.messages (project_id, user_id, content, created_at) values
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333', 'On it. I''ll share a Figma by tomorrow.', now() - interval '18 hours'),
   ('cccccccc-cccc-cccc-cccc-cccccccccccc', '33333333-3333-3333-3333-333333333333', 'Sam, can you scrape the city open-data portal for station locations?', now() - interval '2 days'),
   ('cccccccc-cccc-cccc-cccc-cccccccccccc', '44444444-4444-4444-4444-444444444444', 'Yep, found a JSON endpoint. Pushing a draft tonight.', now() - interval '2 days' + interval '3 hours');
+
+-- --- Admins (local dev) ---------------------------------------------------
+-- Make Ada a platform admin so the /admin page can be exercised locally. Ada is
+-- only a member of StudyFlow, so visiting /admin proves admins can also read the
+-- GreenMap team space they don't belong to. In production, grant admins via the
+-- Supabase dashboard instead of seeding.
+insert into public.admins (user_id) values
+  ('11111111-1111-1111-1111-111111111111');
