@@ -3,14 +3,13 @@ import { signOut } from "~/app/auth-actions";
 import { BrandWordmark } from "~/components/brand-logo";
 import { NavLinks } from "~/components/nav-links";
 import { Button } from "~/components/ui/button";
-import { getProfile, getUser, isAdmin } from "~/lib/auth";
+import { getProfile, getUser } from "~/lib/auth";
 
 export async function Navbar() {
   const profile = await getProfile();
   // Distinguish "logged in but mid-onboarding" (user, no profile yet) from
   // "logged out" so the nav never shows Sign in / Sign up to a signed-in user.
   const isAuthed = profile ? true : Boolean(await getUser());
-  const admin = profile ? await isAdmin() : false;
 
   return (
     <nav className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
@@ -19,7 +18,7 @@ export async function Navbar() {
           <Link href={profile ? "/projects" : isAuthed ? "/onboarding" : "/"}>
             <BrandWordmark />
           </Link>
-          {profile && <NavLinks username={profile.username} isAdmin={admin} />}
+          {profile && <NavLinks username={profile.username} />}
         </div>
 
         {isAuthed ? (
