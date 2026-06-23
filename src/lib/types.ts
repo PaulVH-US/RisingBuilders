@@ -3,6 +3,7 @@
 // regenerate with `npx supabase gen types typescript --local > src/lib/types.ts`.
 
 export type Goal = "start" | "join" | "explore";
+export type WaitlistIntent = "start_project" | "join_project" | "explore";
 export type CommitmentLevel = "low" | "medium" | "high";
 export type MembershipRole = "owner" | "member";
 export type JoinRequestStatus = "pending" | "accepted" | "rejected";
@@ -68,6 +69,16 @@ export type Invitation = {
   created_at: string;
 };
 
+export type WaitlistSubmission = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  intent: WaitlistIntent;
+  details: string | null;
+  created_at: string;
+};
+
 // Minimal Database interface so the Supabase client is generically typed.
 // Each table includes an empty `Relationships` array to satisfy supabase-js's
 // GenericTable constraint (embeds are resolved via explicit FK hints instead).
@@ -116,6 +127,13 @@ export interface Database {
         Insert: Partial<Invitation> &
           Pick<Invitation, "project_id" | "user_id">;
         Update: Partial<Invitation>;
+        Relationships: [];
+      };
+      waitlist_submissions: {
+        Row: WaitlistSubmission;
+        Insert: Partial<WaitlistSubmission> &
+          Pick<WaitlistSubmission, "first_name" | "last_name" | "email" | "intent">;
+        Update: Partial<WaitlistSubmission>;
         Relationships: [];
       };
     };
