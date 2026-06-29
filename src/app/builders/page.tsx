@@ -1,6 +1,9 @@
+import Link from "next/link";
+import { Suspense } from "react";
 import { BuilderFilters } from "~/components/builder-filters";
 import { GradientAvatar } from "~/components/gradient-avatar";
 import { InviteBuilderButton } from "~/components/invite-builder-button";
+import { SearchBar } from "~/components/search-bar";
 import { Badge } from "~/components/ui/badge";
 import { Card } from "~/components/ui/card";
 import { isActiveThisWeek, requireProfile } from "~/lib/auth";
@@ -13,10 +16,15 @@ export const metadata = { title: "Builders · Rising Builders" };
 export default async function BuildersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ skill?: string; interest?: string; goal?: string }>;
+  searchParams: Promise<{
+    skill?: string;
+    interest?: string;
+    goal?: string;
+    q?: string;
+  }>;
 }) {
   const me = await requireProfile();
-  const { skill, interest, goal } = await searchParams;
+  const { skill, interest, goal, q } = await searchParams;
   const supabase = await createClient();
 
   let query = supabase
@@ -29,11 +37,15 @@ export default async function BuildersPage({
   if (goal === "start" || goal === "join" || goal === "explore") {
     query = query.eq("goal", goal as Goal);
   }
+  if (q) {
+    query = query.or(
+      `first_name.ilike.%${q}%,last_name.ilike.%${q}%,username.ilike.%${q}%`,
+    );
+  }
 
   const { data } = await query.returns<Profile[]>();
   const builders = (data ?? []).filter((p) => p.id !== me.id);
 
-  // The current user's own projects power the "invite to project" picker.
   const { data: myProjects } = await supabase
     .from("projects")
     .select("id,title")
@@ -54,6 +66,10 @@ export default async function BuildersPage({
         </p>
       </div>
 
+      <Suspense fallback={<div className="h-10 rounded-md bg-muted/40 animate-pulse" />}>
+        <SearchBar placeholder="Search by name…" />
+      </Suspense>
+
       <div className="animate-rise" style={{ animationDelay: "60ms" }}>
         <BuilderFilters skill={skill} interest={interest} goal={goal} />
       </div>
@@ -67,19 +83,32 @@ export default async function BuildersPage({
           {builders.map((b, i) => (
             <Card
               key={b.id}
-              className="animate-rise gap-3 p-5"
+              className="relative animate-rise gap-3 p-5 transition-shadow hover:shadow-md"
               style={{ animationDelay: `${Math.min(i, 8) * 60 + 80}ms` }}
             >
+              <Link
+                href={`/builders/${b.username}`}
+                className="absolute inset-0 z-0 rounded-[inherit]"
+                aria-label={`View ${b.first_name} ${b.last_name}'s profile`}
+              />
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <GradientAvatar name={b.username} size={36} />
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-display font-semibold">
+                  <GradientAvatar
+                    name={`${b.first_name} ${b.last_name}`}
+                    size={36}
+                  />
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-display font-semibold">
+                        {b.first_name} {b.last_name}
+                      </span>
+                      {isActiveThisWeek(b.last_active_at) && (
+                        <span className="pulse-ring size-1.5 rounded-full bg-success" />
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
                       @{b.username}
                     </span>
-                    {isActiveThisWeek(b.last_active_at) && (
-                      <span className="pulse-ring size-1.5 rounded-full bg-success" />
-                    )}
                   </div>
                 </div>
                 <Badge variant="outline">{GOAL_LABELS[b.goal]}</Badge>
@@ -101,19 +130,16 @@ export default async function BuildersPage({
                 </p>
               )}
 
-              <div className="flex items-center justify-between gap-2 pt-1">
-                {b.linkedin_url ? (
-                  <a
-                    href={b.linkedin_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-medium underline hover:text-foreground"
-                  >
-                    LinkedIn ↗
-                  </a>
-                ) : (
-                  <span />
-                )}
+              {[b.activity_1, b.activity_2, b.activity_3]
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((act, idx) => (
+                  <p key={idx} className="text-sm text-muted-foreground line-clamp-2">
+                    {act}
+                  </p>
+                ))}
+
+              <div className="relative z-10 flex justify-end pt-1">
                 <InviteBuilderButton
                   builderId={b.id}
                   builderUsername={b.username}

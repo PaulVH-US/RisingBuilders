@@ -11,9 +11,11 @@ const links = [
 
 export function NavLinks({
   username,
+  firstName,
   isAdmin = false,
 }: {
   username: string;
+  firstName: string;
   isAdmin?: boolean;
 }) {
   const pathname = usePathname();
@@ -44,7 +46,7 @@ export function NavLinks({
           pathname === "/profile" ? "text-foreground" : "text-muted-foreground",
         )}
       >
-        @{username}
+        {firstName || `@${username}`}
       </Link>
     </div>
   );

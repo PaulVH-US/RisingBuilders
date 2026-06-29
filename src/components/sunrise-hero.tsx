@@ -167,13 +167,16 @@ export function SunriseHero() {
             size="lg"
             className="border-0 bg-white text-primary hover:bg-white/90"
           >
-            <Link href="/waitlist">
-              Join the waitlist
+            <Link href="/signup">
+              Get started
               <ArrowRight className="size-4" />
             </Link>
           </Button>
           <p className="text-sm font-semibold text-white/90">
-            Launching July 1st. We&apos;ll email you when your spot is ready.
+            Already have an account?{" "}
+            <Link href="/login" className="underline underline-offset-2">
+              Sign in
+            </Link>
           </p>
         </div>
       </div>

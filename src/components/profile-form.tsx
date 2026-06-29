@@ -6,6 +6,7 @@ import { TagInput } from "~/components/tag-input";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
 import { GOAL_OPTIONS, INTEREST_OPTIONS, SKILL_OPTIONS } from "~/lib/constants";
 import type { Profile } from "~/lib/types";
 import { cn } from "~/lib/utils";
@@ -36,24 +37,35 @@ export function ProfileForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="username">Username</Label>
-        <Input
-          id="username"
-          name="username"
-          placeholder="adabuilds"
-          defaultValue={defaults?.username}
-          required
-        />
-        <p className="text-xs text-muted-foreground">
-          3–20 characters: letters, numbers, underscores.
-        </p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="first_name">First name</Label>
+          <Input
+            id="first_name"
+            name="first_name"
+            placeholder="Ada"
+            defaultValue={defaults?.first_name ?? ""}
+            autoComplete="given-name"
+            required
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="last_name">Last name</Label>
+          <Input
+            id="last_name"
+            name="last_name"
+            placeholder="Lovelace"
+            defaultValue={defaults?.last_name ?? ""}
+            autoComplete="family-name"
+            required
+          />
+        </div>
       </div>
 
       <TagInput
         name="skills"
         label="Skills"
-        placeholder="Add a skill (e.g. coding)"
+        placeholder="Type and press Enter or click Add"
         suggestions={SKILL_OPTIONS}
         defaultValue={defaults?.skills}
       />
@@ -61,7 +73,7 @@ export function ProfileForm({
       <TagInput
         name="interests"
         label="Interests"
-        placeholder="Add an interest (e.g. AI)"
+        placeholder="Type and press Enter or click Add"
         suggestions={INTEREST_OPTIONS}
         defaultValue={defaults?.interests}
       />
@@ -95,21 +107,44 @@ export function ProfileForm({
         </div>
       </fieldset>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="linkedin_url">
-          LinkedIn <span className="text-muted-foreground">(optional)</span>
-        </Label>
-        <Input
-          id="linkedin_url"
-          name="linkedin_url"
-          type="url"
-          inputMode="url"
-          placeholder="https://linkedin.com/in/you"
-          defaultValue={defaults?.linkedin_url ?? ""}
-        />
-        <p className="text-xs text-muted-foreground">
-          A lightweight way to show you're a serious builder.
-        </p>
+      <div className="flex flex-col gap-4">
+        <div>
+          <span className="text-sm font-medium">Activities</span>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Share up to 3 activities — clubs, projects, sports, jobs, anything
+            you do. Max 300 characters each.
+          </p>
+        </div>
+        {(
+          [
+            ["activity_1", defaults?.activity_1],
+            ["activity_2", defaults?.activity_2],
+            ["activity_3", defaults?.activity_3],
+          ] as const
+        ).map(([fieldName, defaultVal], i) => (
+          <div key={fieldName} className="flex flex-col gap-2">
+            <Label htmlFor={fieldName}>
+              Activity {i + 1}{" "}
+              {i > 0 && (
+                <span className="text-muted-foreground">(optional)</span>
+              )}
+            </Label>
+            <Textarea
+              id={fieldName}
+              name={fieldName}
+              defaultValue={defaultVal ?? ""}
+              placeholder={
+                i === 0
+                  ? "e.g. Founder of a climate-tech startup focused on food waste"
+                  : i === 1
+                    ? "e.g. Varsity debate captain, state finalist 2025"
+                    : "e.g. Open-source contributor to pandas"
+              }
+              maxLength={300}
+              rows={2}
+            />
+          </div>
+        ))}
       </div>
 
       {state.error && (

@@ -23,15 +23,9 @@ export async function GET(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let destination = "/onboarding";
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
-    destination = profile ? "/projects" : "/onboarding";
-  }
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("id").eq("id", user.id).maybeSingle()
+    : { data: null };
 
-  return NextResponse.redirect(`${origin}${destination}`);
+  return NextResponse.redirect(`${origin}${profile ? "/projects" : "/onboarding"}`);
 }

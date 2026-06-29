@@ -68,8 +68,8 @@ export default async function Home() {
             size="lg"
             className="border-0 bg-white text-primary hover:bg-white/90"
           >
-            <Link href="/waitlist">
-              Join the waitlist
+            <Link href="/signup">
+              Get started
               <ArrowRight className="size-4" />
             </Link>
           </Button>

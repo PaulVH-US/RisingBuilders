@@ -5,6 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Absolute date, e.g. "Jun 29, 2026".
+export function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 // Compact relative time, e.g. "just now", "5m ago", "3d ago".
 export function timeAgo(iso: string): string {
   const seconds = Math.round((Date.now() - new Date(iso).getTime()) / 1000);

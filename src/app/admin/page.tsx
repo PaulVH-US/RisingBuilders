@@ -5,6 +5,7 @@ import { Badge } from "~/components/ui/badge";
 import { Card } from "~/components/ui/card";
 import { requireAdmin } from "~/lib/auth";
 import { createClient } from "~/lib/supabase/server";
+import { formatDate } from "~/lib/utils";
 
 export const metadata = { title: "Admin · Rising Builders" };
 
@@ -32,50 +33,33 @@ interface AdminMessage {
   project: { id: string; title: string } | null;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 export default async function AdminPage() {
   // Admin-only: redirects non-admins to the feed.
   await requireAdmin();
   const supabase = await createClient();
 
-  const [
-    { count: profileCount },
-    { count: projectCount },
-    { count: messageCount },
-    { data: profileData },
-    { data: projectData },
-    { data: messageData },
-  ] = await Promise.all([
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("projects").select("*", { count: "exact", head: true }),
-    supabase.from("messages").select("*", { count: "exact", head: true }),
-    supabase
-      .from("profiles")
-      .select("id,username,goal,skills,created_at")
-      .order("created_at", { ascending: false })
-      .returns<AdminProfile[]>(),
-    supabase
-      .from("projects")
-      .select(
-        "id,title,description,created_at,creator:profiles!projects_creator_id_fkey(username)",
-      )
-      .order("created_at", { ascending: false })
-      .returns<AdminProject[]>(),
-    supabase
-      .from("messages")
-      .select(
-        "id,content,created_at,author:profiles!messages_user_id_fkey(username),project:projects!messages_project_id_fkey(id,title)",
-      )
-      .order("created_at", { ascending: true })
-      .returns<AdminMessage[]>(),
-  ]);
+  const [{ data: profileData }, { data: projectData }, { data: messageData }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id,username,goal,skills,created_at")
+        .order("created_at", { ascending: false })
+        .returns<AdminProfile[]>(),
+      supabase
+        .from("projects")
+        .select(
+          "id,title,description,created_at,creator:profiles!projects_creator_id_fkey(username)",
+        )
+        .order("created_at", { ascending: false })
+        .returns<AdminProject[]>(),
+      supabase
+        .from("messages")
+        .select(
+          "id,content,created_at,author:profiles!messages_user_id_fkey(username),project:projects!messages_project_id_fkey(id,title)",
+        )
+        .order("created_at", { ascending: true })
+        .returns<AdminMessage[]>(),
+    ]);
 
   const profiles = profileData ?? [];
   const projects = projectData ?? [];
@@ -94,9 +78,9 @@ export default async function AdminPage() {
   }
 
   const stats = [
-    { label: "Profiles", value: profileCount ?? 0, icon: Users },
-    { label: "Projects", value: projectCount ?? 0, icon: FolderKanban },
-    { label: "Discussions", value: messageCount ?? 0, icon: MessagesSquare },
+    { label: "Profiles", value: profiles.length, icon: Users },
+    { label: "Projects", value: projects.length, icon: FolderKanban },
+    { label: "Discussions", value: messages.length, icon: MessagesSquare },
   ];
 
   return (
@@ -128,13 +112,11 @@ export default async function AdminPage() {
         <h2 className="font-display text-lg font-semibold">
           All profiles ({profiles.length})
         </h2>
-        <Card className="gap-0 py-0">
-          {profiles.map((p, i) => (
+        <Card className="divide-y gap-0 py-0">
+          {profiles.map((p) => (
             <div
               key={p.id}
-              className={`flex items-center gap-3 px-4 py-3 ${
-                i > 0 ? "border-t" : ""
-              }`}
+              className="flex items-center gap-3 px-4 py-3"
             >
               <GradientAvatar name={p.username} size={32} />
               <div className="min-w-0 flex-1">
@@ -157,14 +139,12 @@ export default async function AdminPage() {
         <h2 className="font-display text-lg font-semibold">
           All projects ({projects.length})
         </h2>
-        <Card className="gap-0 py-0">
-          {projects.map((p, i) => (
+        <Card className="divide-y gap-0 py-0">
+          {projects.map((p) => (
             <Link
               key={p.id}
               href={`/projects/${p.id}`}
-              className={`flex flex-col gap-1 px-4 py-3 transition-colors hover:bg-muted/50 ${
-                i > 0 ? "border-t" : ""
-              }`}
+              className="flex flex-col gap-1 px-4 py-3 transition-colors hover:bg-muted/50"
             >
               <div className="flex items-center justify-between gap-3">
                 <p className="truncate text-sm font-medium">{p.title}</p>
