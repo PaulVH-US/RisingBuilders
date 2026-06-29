@@ -34,7 +34,7 @@ interface ProjectRow {
   skills_needed: string[];
   commitment_level: CommitmentLevel;
   created_at: string;
-  creator: { username: string; linkedin_url: string | null } | null;
+  creator: { username: string; first_name: string; last_name: string } | null;
 }
 
 interface MemberRow {
@@ -42,8 +42,9 @@ interface MemberRow {
   role: "owner" | "member";
   profile: {
     username: string;
+    first_name: string;
+    last_name: string;
     last_active_at: string;
-    linkedin_url: string | null;
   } | null;
 }
 
@@ -52,7 +53,7 @@ interface RequestRow {
   user_id: string;
   message: string | null;
   created_at: string;
-  profile: { username: string; linkedin_url: string | null } | null;
+  profile: { username: string; first_name: string; last_name: string } | null;
 }
 
 interface MessageRow {
@@ -85,7 +86,7 @@ export default async function ProjectPage({
   const { data: project } = await supabase
     .from("projects")
     .select(
-      "id,creator_id,title,description,category_tags,skills_needed,commitment_level,created_at,creator:profiles!projects_creator_id_fkey(username,linkedin_url)",
+      "id,creator_id,title,description,category_tags,skills_needed,commitment_level,created_at,creator:profiles!projects_creator_id_fkey(username,first_name,last_name)",
     )
     .eq("id", id)
     .maybeSingle<ProjectRow>();
@@ -95,7 +96,7 @@ export default async function ProjectPage({
   const { data: memberData } = await supabase
     .from("memberships")
     .select(
-      "user_id,role,profile:profiles!memberships_user_id_fkey(username,last_active_at,linkedin_url)",
+      "user_id,role,profile:profiles!memberships_user_id_fkey(username,first_name,last_name,last_active_at)",
     )
     .eq("project_id", id)
     .order("role", { ascending: true })
@@ -126,7 +127,7 @@ export default async function ProjectPage({
     const { data } = await supabase
       .from("join_requests")
       .select(
-        "id,user_id,message,created_at,profile:profiles!join_requests_user_id_fkey(username,linkedin_url)",
+        "id,user_id,message,created_at,profile:profiles!join_requests_user_id_fkey(username,first_name,last_name)",
       )
       .eq("project_id", id)
       .eq("status", "pending")
@@ -163,7 +164,10 @@ export default async function ProjectPage({
       {/* Header */}
       <div className="flex flex-col gap-3">
         <div className="flex items-start gap-3">
-          <GradientAvatar name={project.creator?.username ?? "?"} size={48} />
+          <GradientAvatar
+            name={project.creator ? `${project.creator.first_name} ${project.creator.last_name}` : "?"}
+            size={48}
+          />
           <div className="flex flex-1 flex-col gap-2">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <h1 className="font-display text-2xl font-bold tracking-tight">
@@ -175,19 +179,11 @@ export default async function ProjectPage({
               <span>
                 by{" "}
                 <span className="font-medium text-foreground">
-                  @{project.creator?.username ?? "unknown"}
+                  {project.creator
+                    ? `${project.creator.first_name} ${project.creator.last_name}`
+                    : "unknown"}
                 </span>
               </span>
-              {project.creator?.linkedin_url && (
-                <a
-                  href={project.creator.linkedin_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-foreground"
-                >
-                  LinkedIn
-                </a>
-              )}
               <span>· {timeAgo(project.created_at)}</span>
             </div>
           </div>
@@ -328,12 +324,14 @@ export default async function ProjectPage({
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <GradientAvatar
-                      name={m.profile?.username ?? "?"}
+                      name={m.profile ? `${m.profile.first_name} ${m.profile.last_name}` : "?"}
                       size={28}
                     />
                     <span className="flex min-w-0 items-center gap-1.5">
                       <span className="truncate text-sm font-medium">
-                        @{m.profile?.username ?? "unknown"}
+                        {m.profile
+                          ? `${m.profile.first_name} ${m.profile.last_name}`
+                          : "unknown"}
                       </span>
                       {m.role === "owner" && (
                         <Crown className="size-3.5 shrink-0 text-sunrise" />
@@ -381,22 +379,14 @@ export default async function ProjectPage({
                   <Card key={r.id} className="gap-2 p-3">
                     <div className="flex items-center gap-2">
                       <GradientAvatar
-                        name={r.profile?.username ?? "?"}
+                        name={r.profile ? `${r.profile.first_name} ${r.profile.last_name}` : "?"}
                         size={28}
                       />
                       <span className="text-sm font-medium">
-                        @{r.profile?.username ?? "unknown"}
+                        {r.profile
+                          ? `${r.profile.first_name} ${r.profile.last_name}`
+                          : "unknown"}
                       </span>
-                      {r.profile?.linkedin_url && (
-                        <a
-                          href={r.profile.linkedin_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-muted-foreground underline hover:text-foreground"
-                        >
-                          LinkedIn
-                        </a>
-                      )}
                     </div>
                     {r.message && (
                       <p className="text-sm text-muted-foreground">

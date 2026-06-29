@@ -7,11 +7,12 @@ import { TagInput } from "~/components/tag-input";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
 import { GOAL_OPTIONS, INTEREST_OPTIONS, SKILL_OPTIONS } from "~/lib/constants";
 import { cn } from "~/lib/utils";
 
 const initialState: ProfileFormState = { error: null };
-const STEPS = ["You", "Strengths", "Finish"];
+const STEPS = ["You", "Strengths", "Activities"];
 
 export function OnboardingForm() {
   const [state, formAction, pending] = useActionState(
@@ -19,16 +20,14 @@ export function OnboardingForm() {
     initialState,
   );
   const [step, setStep] = useState(0);
-  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
-  const canAdvance = step !== 0 || /^[a-zA-Z0-9_]{3,20}$/.test(username);
+  const canAdvance = step !== 0 || (firstName.trim().length > 0 && lastName.trim().length > 0);
 
   return (
     <form
       action={formAction}
-      // Multi-step form: only the explicit "Go to projects" button submits.
-      // Block Enter so typing in a field (e.g. LinkedIn) never auto-submits
-      // and skips the remaining steps.
       onKeyDown={(e) => {
         if (e.key === "Enter") e.preventDefault();
       }}
@@ -58,21 +57,31 @@ export function OnboardingForm() {
         ))}
       </div>
 
-      {/* Step 1: identity + goal */}
+      {/* Step 1: name + goal */}
       <div hidden={step !== 0} className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="username">Username</Label>
-          <Input
-            id="username"
-            name="username"
-            placeholder="adabuilds"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="off"
-          />
-          <p className="text-xs text-muted-foreground">
-            3–20 characters: letters, numbers, underscores.
-          </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="first_name">First name</Label>
+            <Input
+              id="first_name"
+              name="first_name"
+              placeholder="Ada"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              autoComplete="given-name"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="last_name">Last name</Label>
+            <Input
+              id="last_name"
+              name="last_name"
+              placeholder="Lovelace"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              autoComplete="family-name"
+            />
+          </div>
         </div>
 
         <fieldset className="flex flex-col gap-2">
@@ -108,37 +117,53 @@ export function OnboardingForm() {
         <TagInput
           name="skills"
           label="Skills"
-          placeholder="Add a skill (e.g. coding)"
+          placeholder="Type and press Enter or click Add"
           suggestions={SKILL_OPTIONS}
         />
         <TagInput
           name="interests"
           label="Interests"
-          placeholder="Add an interest (e.g. AI)"
+          placeholder="Type and press Enter or click Add"
           suggestions={INTEREST_OPTIONS}
         />
       </div>
 
-      {/* Step 3: LinkedIn + finish */}
+      {/* Step 3: activities */}
       <div hidden={step !== 2} className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="linkedin_url">
-            LinkedIn <span className="text-muted-foreground">(optional)</span>
-          </Label>
-          <Input
-            id="linkedin_url"
-            name="linkedin_url"
-            type="url"
-            inputMode="url"
-            placeholder="https://linkedin.com/in/you"
-          />
-          <p className="text-xs text-muted-foreground">
-            A lightweight way to show you're a serious builder.
-          </p>
-        </div>
         <p className="text-sm text-muted-foreground">
-          You can refine your skills, interests, and goal anytime from your
-          profile.
+          Share up to 3 activities — clubs, projects, sports, jobs, anything you
+          do. Keep each to 300 characters.
+        </p>
+        {(["activity_1", "activity_2", "activity_3"] as const).map(
+          (fieldName, i) => (
+            <div key={fieldName} className="flex flex-col gap-2">
+              <Label htmlFor={fieldName}>
+                Activity {i + 1}{" "}
+                {i > 0 && (
+                  <span className="text-muted-foreground">(optional)</span>
+                )}
+              </Label>
+              <Textarea
+                id={fieldName}
+                name={fieldName}
+                placeholder={
+                  i === 0
+                    ? "e.g. Founder of a climate-tech startup focused on food waste"
+                    : i === 1
+                      ? "e.g. Varsity debate captain, state finalist 2025"
+                      : "e.g. Open-source contributor to pandas"
+                }
+                maxLength={300}
+                rows={2}
+              />
+              <p className="text-right text-xs text-muted-foreground">
+                max 300 characters
+              </p>
+            </div>
+          ),
+        )}
+        <p className="text-sm text-muted-foreground">
+          You can update your activities anytime from your profile.
         </p>
       </div>
 

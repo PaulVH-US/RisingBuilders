@@ -1,13 +1,13 @@
 "use client";
 
-import { X } from "lucide-react";
-import { useState } from "react";
+import { Plus, X } from "lucide-react";
+import { useRef, useState } from "react";
 import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
 
 interface TagInputProps {
-  /** Form field name; values are submitted as repeated hidden inputs. */
   name: string;
   label: string;
   placeholder?: string;
@@ -19,17 +19,16 @@ function normalize(tag: string) {
   return tag.trim().toLowerCase();
 }
 
-// Chip-based multi-tag picker. Renders hidden inputs so it works inside a plain
-// <form> posting to a server action, no client data layer needed.
 export function TagInput({
   name,
   label,
-  placeholder = "Type and press Enter",
+  placeholder = "Type and press Enter or click Add",
   suggestions = [],
   defaultValue = [],
 }: TagInputProps) {
   const [tags, setTags] = useState<string[]>(defaultValue);
   const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   function addTag(raw: string) {
     const tag = normalize(raw);
@@ -70,32 +69,61 @@ export function TagInput({
         </div>
       )}
 
-      <Input
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === ",") {
-            e.preventDefault();
-            addTag(draft);
-          } else if (e.key === "Backspace" && !draft && tags.length) {
-            removeTag(tags[tags.length - 1]);
-          }
-        }}
-        placeholder={placeholder}
-      />
+      <div className="flex gap-2">
+        <Input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              addTag(draft);
+            } else if (e.key === "Backspace" && !draft && tags.length) {
+              removeTag(tags[tags.length - 1]);
+            }
+          }}
+          placeholder={placeholder}
+          className="flex-1"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => addTag(draft)}
+          disabled={!draft.trim()}
+          className="shrink-0"
+        >
+          <Plus className="size-3.5" />
+          Add
+        </Button>
+      </div>
 
       {remainingSuggestions.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {remainingSuggestions.map((s) => (
-            <button key={s} type="button" onClick={() => addTag(s)}>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs text-muted-foreground">Quick add:</span>
+          <div className="flex flex-wrap gap-1.5">
+            {remainingSuggestions.map((s) => (
+              <button key={s} type="button" onClick={() => addTag(s)}>
+                <Badge
+                  variant="outline"
+                  className={cn("cursor-pointer hover:bg-accent")}
+                >
+                  + {s}
+                </Badge>
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => inputRef.current?.focus()}
+            >
               <Badge
                 variant="outline"
-                className={cn("cursor-pointer hover:bg-accent")}
+                className="cursor-pointer text-muted-foreground hover:bg-accent hover:text-foreground"
               >
-                + {s}
+                + other
               </Badge>
             </button>
-          ))}
+          </div>
         </div>
       )}
     </div>

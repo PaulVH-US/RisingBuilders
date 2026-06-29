@@ -1,9 +1,11 @@
 import { Mail, Plus, Telescope } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 import { respondToInvitation } from "~/app/projects/project-actions";
 import { FeedFilters } from "~/components/feed-filters";
 import { GradientAvatar } from "~/components/gradient-avatar";
 import { ProjectCard, type ProjectCardData } from "~/components/project-card";
+import { SearchBar } from "~/components/search-bar";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { isActiveThisWeek, requireProfile } from "~/lib/auth";
@@ -35,10 +37,15 @@ interface InvitationRow {
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string; skill?: string; commitment?: string }>;
+  searchParams: Promise<{
+    tag?: string;
+    skill?: string;
+    commitment?: string;
+    q?: string;
+  }>;
 }) {
   const me = await requireProfile();
-  const { tag, skill, commitment } = await searchParams;
+  const { tag, skill, commitment, q } = await searchParams;
 
   const supabase = await createClient();
 
@@ -69,10 +76,13 @@ export default async function ProjectsPage({
   ) {
     query = query.eq("commitment_level", commitment);
   }
+  if (q) {
+    query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
+  }
 
   const { data } = await query.returns<EmbeddedProject[]>();
 
-  const projects: ProjectCardData[] = (data ?? []).map((p) => ({
+  const toCard = (p: EmbeddedProject): ProjectCardData => ({
     id: p.id,
     title: p.title,
     description: p.description,
@@ -80,14 +90,17 @@ export default async function ProjectsPage({
     skills_needed: p.skills_needed,
     commitment_level: p.commitment_level,
     creatorUsername: p.creator?.username ?? "unknown",
-    creatorActive: p.creator
-      ? isActiveThisWeek(p.creator.last_active_at)
-      : false,
+    creatorActive: p.creator ? isActiveThisWeek(p.creator.last_active_at) : false,
     memberCount: p.memberships.length,
     memberUsernames: p.memberships
       .map((m) => m.profile?.username)
       .filter((u): u is string => Boolean(u)),
-  }));
+  });
+
+  const raw = data ?? [];
+  const mine = raw.filter((p) => p.creator?.username === me.username);
+  const others = raw.filter((p) => p.creator?.username !== me.username);
+  const projects: ProjectCardData[] = [...mine, ...others].map(toCard);
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">
@@ -172,6 +185,10 @@ export default async function ProjectsPage({
           ))}
         </section>
       )}
+
+      <Suspense fallback={<div className="h-10 rounded-md bg-muted/40 animate-pulse" />}>
+        <SearchBar placeholder="Search projects…" />
+      </Suspense>
 
       <div className="animate-rise" style={{ animationDelay: "60ms" }}>
         <FeedFilters tag={tag} skill={skill} commitment={commitment} />

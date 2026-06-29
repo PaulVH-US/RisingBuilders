@@ -56,8 +56,19 @@ export async function isAdmin(): Promise<boolean> {
 // Guard for admin-only pages. Requires a signed-in, onboarded builder who is
 // also an admin; otherwise redirects to the feed. Returns the admin's profile.
 export async function requireAdmin(): Promise<Profile> {
-  const profile = await requireProfile();
-  if (!(await isAdmin())) redirect("/projects");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const [{ data: profile }, { data: adminRow }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+    supabase.from("admins").select("user_id").eq("user_id", user.id).maybeSingle(),
+  ]);
+
+  if (!profile) redirect("/onboarding");
+  if (!adminRow) redirect("/projects");
   return profile;
 }
 
